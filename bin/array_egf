@@ -1,0 +1,102 @@
+#!/usr/bin/env julia
+
+## Empirical Green's function retrieval via moving window cross correlation of
+## two signals. The station pairs are given by a text file called
+## 'station_pairs.txt' and the moving window step and window length are
+## prescribed in 'config.txt'. The EGF's are saved in
+## 'EmpiricalGreensFunctions.csv' and the multitaper spectral estimates of the
+## EGF's are saved in 'EGFspectrum.csv' where the first fow of each dataset
+## contains the time vector and the frequencies, respectively.
+##
+## Created by Steven Bernsen
+## University of Maine
+##----------------------------------------------------------------------------
+
+################################################################################
+################################# Trump Sucks ##################################
+################################################################################
+
+# ---------------------------------------------------------------------------- #
+#                     Open Libraries and Define Functions                      #
+# ---------------------------------------------------------------------------- #
+using SAC, DataFrames, RCall, DSP, ArgParse
+
+# Read the config.txt file to get the
+config = readtable("config.txt", header = false, separator = '\t')
+m = size(config, 1)
+
+win_len = 1
+STEP = 1
+function_path = ""
+for i = 1:m
+    if config[i,1] == "window:"
+        win_len = parse(Int, config[i,2] )
+    elseif config[i,1] == "step:"
+        STEP = parse(Int, config[i,2] )
+    else
+        function_path = config[i,2]
+    end
+end
+
+include(function_path)
+# ---------------------------------------------------------------------------- #
+#                       Set Paths and Define Constants                         #
+# ---------------------------------------------------------------------------- #
+
+# Load the list of station pairs
+sta_prs = readtable("station_pairs.txt", separator = '\t', header = false)
+
+# Allocate space
+n = size(sta_prs, 1) +1
+EGF = zeros(2*win_len, n)
+PSD = zeros(win_len+1, n)
+ts1 = 0
+mtp = 0
+
+# Assign the time vector to EGF
+EGF[:,1] = 0:(2*win_len-1)
+
+# ---------------------------------------------------------------------------- #
+#                      Get the EGF For Each Station Pair                       #
+# ---------------------------------------------------------------------------- #
+
+for i = 1:n-1
+    # Load the file. The header and time series are stored as an object
+    ts1 = SAC.read(sta_prs[i,1]) # the time series is in 't'
+    ts2 = SAC.read(sta_prs[i,2])
+
+    arr1 = padded_mw_array(ts1.t, win_len, STEP)
+    arr2 = padded_mw_array(ts2.t, win_len, STEP)
+
+    arr_xc = array_xcorr(arr1, arr2)
+    #uncomment the following line if we want the fft of the egf
+    # arr_xc2 = arr_xc[2]
+    arr_xc = arr_xc[1]
+
+    sd = mapslices(std, arr_xc, 2)
+    egf = mapslices(mean, arr_xc, 2).*ts1.delta # stack the rows
+    EGF[:,i+1] = [ egf[ (win_len):end]; egf[1:win_len-1] ]
+
+    # Get the multitaper spectrum of the egf
+    mtp = mt_pgram(EGF[:,i+1]; fs = 1, nw = 4)
+
+    PSD[:,i+1] = 10*log10(mtp.power) # Put in terms of gain. Double for power
+end
+
+
+# Uncomment the follwing lines to view the EGF
+#R"""
+#dev.new()
+#plot( $EGF[,1], type = "l", main = paste("Step", $STEP) )
+#"""
+
+# scale the time vector by delta and add the frequency vector to psd
+EGF[:,1] = EGF[:,1].*ts1.delta
+PSD[:,1] = mtp.freq./ts1.delta
+
+## Save the results
+EGF = DataFrame(EGF)
+PSD = DataFrame(PSD)
+
+writetable("EmpiricalGreensFunctions.csv", EGF, separator = ',', header = false)
+writetable("EGFspectrum.csv", PSD, separator = ',', header = false)
