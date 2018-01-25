@@ -22,23 +22,15 @@
 using SAC, DataFrames, RCall, DSP
 
 # Read the config.txt file to get the
-config = readtable("config.txt", header = false, separator = '\t')
-m = size(config, 1)
+config = readtable("config.txt", header = false, separator = ':')
 
-win_len = 1
-STEP = 1
-function_path = ""
-for i = 1:m
-    if config[i,1] == "window:"
-        win_len = parse(Int, config[i,2] )
-    elseif config[i,1] == "step:"
-        STEP = parse(Int, config[i,2] )
-    else
-        function_path = config[i,2]
-    end
-end
+# Assign the values listed in the configuration file
+win_len = parse(Int, (config[ config[:,1] .== "window",2])[1] )
+STEP = parse(Int, (config[ config[:,1] .== "step", 2] )[1] )
+function_path = (config[ config[:,1] .== "function_path", 2])[1]
 
 include(function_path)
+
 # ---------------------------------------------------------------------------- #
 #                       Set Paths and Define Constants                         #
 # ---------------------------------------------------------------------------- #

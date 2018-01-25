@@ -1,3 +1,4 @@
-window:	1024
-step:	8
-function_path:	/home/bernsen/seismic/impulse_response_toolbox/functions/egf_functions.jl
+window: 1024
+step: 8
+reference_station: 17
+function_path: /home/bernsen/seismic/impulse_response_toolbox/functions/egf_functions.jl

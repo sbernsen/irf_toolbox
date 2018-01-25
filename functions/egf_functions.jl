@@ -118,3 +118,16 @@ ts = ts./rms
 return ts
 
 end
+
+
+################################################################################
+################################# IO Functions #################################
+################################################################################
+
+
+function matrix2SAC(data_arr, sta_list)
+#
+#
+# This function was made specific for 'virtual_gathers.jl' because each gather
+# corresponds to the list of stations used to create them.
+end

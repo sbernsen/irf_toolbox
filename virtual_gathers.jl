@@ -1,44 +1,46 @@
+
 # ---------------------------------------------------------------------------- #
 #                     Open Libraries and Define Functions                      #
 # ---------------------------------------------------------------------------- #
 using SAC, DataFrames, RCall, DSP
 
+# Read the config.txt file to get the
+config = readtable("config.txt", header = false, separator = ':')
+
+# Assign the values listed in the configuration file
+win_len = parse(Int, (config[ config[:,1] .== "window",2])[1] )
+STEP = parse(Int, (config[ config[:,1] .== "step", 2] )[1] )
+function_path = (config[ config[:,1] .== "function_path", 2])[1]
+ref_sta = parse(Int, (config[ config[:,1] .== "reference_station", 2] )[1] )
+include(function_path)
 
 # ---------------------------------------------------------------------------- #
 #                       Set Paths and Define Constants                         #
 # ---------------------------------------------------------------------------- #
 # Load the list of stations
-lsst = readtable("station_list.txt", header = false, separator = '\t')
-lid = lsst[:,2]
+sta_list = readtable("station_list.txt", header = false, separator = '\t')
+lid = sta_list[:,2]
 
 lsst = lsst[lsst[:,2],:]
 n = size(lsst, 1)
 
-function_path = "functions/egf_functions.jl"
-include(function_path)
+# Define the source reciever by location or by filename
 
 
 # ---------------------------------------------------------------------------- #
 #                      Get the EGF For Each Station                            #
 # ---------------------------------------------------------------------------- #
 
+
 # Allocate space
-ts = SAC.read(lsst[1,1])
-m = length(ts1.t)
-M = m-1000
+xcf_forward = zeros(win_len, n)
+xcf_backward = zeros(win_len, n)
+
 ts_array = zeros(m, n)
-xcf_forward = zeros(M, n)
-xcf_backward = zeros(M,n)
 forward = true
 backward = false
 
-int = collect(1:n)
 
-ts_array[:,1] = ts.t
-for i = 2:n
-        ts = SAC.read(lsst[i,1])
-        ts_array[:,i] = ts.t
-end
 
 for i = 1:n
     xcfb = zeros(M, 1)
@@ -61,8 +63,17 @@ for i = 1:n
 
 end
 
+xcf_forward = DataFrame(xcf_forward)
+xcf_backward = DataFrame(xcf_backward)
+
+writetable("virtual_shot_gather.csv", xcf_forward, separator = ',', header = false)
+writetable("virtual_reciever_gather.csv", xcf_backward, separator = ',', header = false)
+
+
+#=
 R"""
     library(fields)
     dev.new()
     image(t($xcf[1:$M,]), col = tim.colors(100) )
 """
+=#
