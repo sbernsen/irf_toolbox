@@ -71,3 +71,50 @@ arr_xc = real( mapslices( ifft, fft_arr, 1) )
 return arr_xc, fft_arr
 
 end
+
+function xcorr_td(ts1, ts2, forward)
+# compute the time domain cross correlation for two equal length time series for positive or negative lags
+#
+# Input Variables:
+#	ts1, ts2 - the m-by-1 vectors to cross correlate
+#	forward - boolean value (true/false) to compute the xcf in positive or negative lags
+# Output Variables:
+#	xcf - the 2m-by-1 cross correlation vector
+
+# Allocate space
+n = length(ts1)
+xcf = zeros(n-1, 1)
+
+# Compute the cross correlation
+if forward == "true"
+	for i = 1:n-1
+		xcf[i] = ( (ts1[1:(n-i+1)]'*ts2[i:n])/(std(ts1[1:(n-i+1)])*std(ts2[i:n]) ) )[1]
+	end
+else
+	for i = 1:n-1
+		xcf[i] = (  (ts2[1:(n-i+1)]'*ts1[i:n])/(std(ts2[1:(n-i+1)])*std(ts1[i:n]) ) )[1]
+	end
+end
+
+return xcf
+
+end
+
+
+function rms_norm(ts)
+# Compute the cross correlation in the frequency domain of each column
+#
+# Input Variables:
+#
+# Output Variables:
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+n = length(ts)
+rms = sqrt( (1/n)*(ts'*ts) )
+
+ts = ts./rms
+
+return ts
+
+end

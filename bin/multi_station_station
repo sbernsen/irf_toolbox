@@ -19,7 +19,7 @@
 # ---------------------------------------------------------------------------- #
 #                     Open Libraries and Define Functions                      #
 # ---------------------------------------------------------------------------- #
-using SAC, DataFrames, RCall, DSP, ArgParse
+using SAC, DataFrames, RCall, DSP
 
 # Read the config.txt file to get the
 config = readtable("config.txt", header = false, separator = '\t')
@@ -47,7 +47,7 @@ include(function_path)
 sta_prs = readtable("station_pairs.txt", separator = '\t', header = false)
 
 # Allocate space
-n = size(sta_prs, 1) +1
+n = size(sta_prs, 1) + 1
 EGF = zeros(2*win_len, n)
 PSD = zeros(win_len+1, n)
 ts1 = 0
@@ -75,7 +75,7 @@ for i = 1:n-1
 
     sd = mapslices(std, arr_xc, 2)
     egf = mapslices(mean, arr_xc, 2).*ts1.delta # stack the rows
-    EGF[:,i+1] = [ egf[ (win_len):end]; egf[1:win_len-1] ]
+    EGF[:,i+1] = [ egf[ (win_len+1):end]; egf[1:win_len] ]
 
     # Get the multitaper spectrum of the egf
     mtp = mt_pgram(EGF[:,i+1]; fs = 1, nw = 4)
