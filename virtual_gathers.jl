@@ -36,30 +36,34 @@ n = size(lsst, 1)
 xcf_forward = zeros(win_len, n)
 xcf_backward = zeros(win_len, n)
 
-ts_array = zeros(m, n)
-forward = true
-backward = false
+# Determine the forward and backward operators
+bf = lid - ref_sta
+ind = (find(lid .== 17) )[1]
 
+# Get the time series for the reference station
+ts1 = SAC.read(sta_list[ind,1])
 
+# get the autocorelation for the reference station
+arr1 = mw_array(ts1.t, win_len, STEP, false)
 
-for i = 1:n
-    xcfb = zeros(M, 1)
-    xcff = zeros(M, 1)
-    st_ind = filter!(e->e!=i, int)
+# Get the cross correlation for the forward, backward and sum of both,
+# respective
+arr_xc = array_xcorr(arr1, arr1)
 
-    for j in st_ind
+# The following two lines are the same for the autocorrelation
+xcf_forward[:,ind] = mapslices(mean, arr_xc[1], 2).*ts1.delta # stack the rows
+xcf_backward[:,ind] = mapslices(mean, arr_xc[2], 2).*ts1.delta
 
-        xc = crosscor(ts_array[:,i], ts_array[:,j], [1:(M-1); true] )
-        xc = rms_norm(xc)
-        xcff = xcff + xc
+# Lets cross correlate with the rest of the stations
+st_ind = filter!(e->e!=i, ind)
 
-        xc = crosscor(ts_array[:,j], ts_array[:,i], [1:(M-1); true] )
-        xc = rms_norm(xc)
-        xcfb = xcfb + xc
-    end
+for i in st_ind
+    ts2 = SAC.read(sta_list[ind,1])
+    arr2 = mw_array(ts2.t, win_len, STEP, false)
+    arr_xc = array_xcorr(arr1, arr2)
 
-    xcf_forward[:,i] = xcff./(n-1)
-    xcf_backward[:,i] = xcfb./(n-1)
+    xcf_forward[:,i] = mapslices(mean, arr_xc[1], 2).*ts1.delta # stack the rows
+    xcf_backward[:,i] = mapslices(mean, arr_xc[2], 2).*ts1.delta
 
 end
 

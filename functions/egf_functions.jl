@@ -1,9 +1,10 @@
 using DSP
 
 
-function padded_mw_array(ts, win_len, STEP)
+
+function mw_array(ts, win_len, STEP, pad)
 # Assemble an array for the tukey window where each column is a new step in the
-# time series then pad the array with zeros.
+# time series then pad the array with zeros if specified.
 #
 # Input Variables:
 #   ts - the m-by-1 time series
@@ -15,34 +16,39 @@ function padded_mw_array(ts, win_len, STEP)
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-# Set the tukey alpha value; 0 - rectangle window, 1 - Hann window
-alpha = 0.2
+    # Set the tukey alpha value; 0 - rectangle window, 1 - Hann window
+    alpha = 0.2
 
-# create the tukey window
-win = tukey(win_len, alpha)
+    # create the tukey window
+    win = tukey(win_len, alpha)
 
-# Lets get the integer values of the time series for each window
-a = [ 1 ]
-b = [ win_len ]
-m = length(ts)
-i = 1
+    # Lets get the integer values of the time series for each window
+    a = [ 1 ]
+    b = [ win_len ]
+    m = length(ts)
+    i = 1
 
+    while (b[i]+STEP) <= m
+        a = push!(a, a[i] + STEP )
+        b = push!(b, b[i] + STEP )
 
-while (b[i]+STEP) <= m
-    a = push!(a, a[i] + STEP )
-    b = push!(b, b[i] + STEP )
+        i = i + 1
+    end
 
-    i = i + 1
-end
+    n = length(a)
+    mw_array = zeros(win_len, n)
 
-n = length(a)
-padded_array = zeros(2*win_len, n)
+    # Pad with zeros if needed
+    if pad == true
+        mw_array = zeros(2*win_len, n)
+    end
 
-for i in 1:n
-    padded_array[1:win_len, i] = ts[ a[i]:b[i] ].*win
-end
+    for i in 1:n
+        ts_norm = rms_norm( ts[ a[i]:b[i] ] )
+        mw_array[1:win_len, i] = ts_norm.*win
+    end
 
-return padded_array
+    return mw_array
 
 end
 
@@ -58,45 +64,56 @@ function array_xcorr(arr1, arr2)
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Compute the FFT on each column
-arr1 = mapslices(fft, arr1, 1)
-arr2 = mapslices(fft, arr2, 1)
+    # Compute the FFT on each column
+    arr1 = mapslices(fft, arr1, 1)
+    arr2 = mapslices(fft, arr2, 1)
 
-# Compute the dot product
-fft_arr = arr1.*conj(arr2)
+    # Compute the dot product
+    fft_arr_f = arr1.*conj(arr2)
+    fft_arr_b = arr2.*conj(arr1)
 
-# Get the inverse FFT
-arr_xc = real( mapslices( ifft, fft_arr, 1) )
-
-return arr_xc, fft_arr
+    # Get the inverse FFT
+    arr_xc_f = real( mapslices( ifft, fft_arr_f, 1) )
+    arr_xc_b = real( mapslices( ifft, fft_arr_b, 1) )
+    arr_xc = arr_xc_f + arr_xc_b
+    return arr_xc_f, arr_xc_b, arr_xc
 
 end
 
-function xcorr_td(ts1, ts2, forward)
+function xcorr_td(arr1, arr2, forward)
 # compute the time domain cross correlation for two equal length time series for positive or negative lags
 #
 # Input Variables:
-#	ts1, ts2 - the m-by-1 vectors to cross correlate
-#	forward - boolean value (true/false) to compute the xcf in positive or negative lags
+#	arr1, arr2 -  the m-by-n array to cross correlate
+#	forward -     boolean value (true/false) to compute the xcf in positive or
+#                 negative lags
 # Output Variables:
-#	xcf - the 2m-by-1 cross correlation vector
+#	arr_xc -         the m-by-n cross correlation vector
 
-# Allocate space
-n = length(ts1)
-xcf = zeros(n-1, 1)
+    # Allocate space
+    n = length(ts1)
+    xcf = zeros(n-1, 1)
 
-# Compute the cross correlation
-if forward == "true"
-	for i = 1:n-1
-		xcf[i] = ( (ts1[1:(n-i+1)]'*ts2[i:n])/(std(ts1[1:(n-i+1)])*std(ts2[i:n]) ) )[1]
-	end
-else
-	for i = 1:n-1
-		xcf[i] = (  (ts2[1:(n-i+1)]'*ts1[i:n])/(std(ts2[1:(n-i+1)])*std(ts1[i:n]) ) )[1]
-	end
-end
+    # Compute the FFT on each column
+    arr1 = mapslices(fft, arr1, 1)
+    arr2 = mapslices(fft, arr2, 1)
 
-return xcf
+    # Compute the cross correlation
+    if forward == "true"
+        # Compute the dot product
+        fft_arr = arr1.*conj(arr2)
+
+        # Get the inverse FFT
+        arr_xc = real( mapslices( ifft, fft_arr, 1) )
+    else
+        # Compute the dot product
+        fft_arr = arr2.*conj(arr1)
+
+        # Get the inverse FFT
+        arr_xc = real( mapslices( ifft, fft_arr, 1) )
+    end
+
+    return arr_xc
 
 end
 

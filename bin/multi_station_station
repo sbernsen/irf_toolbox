@@ -57,8 +57,8 @@ for i = 1:n-1
     ts1 = SAC.read(sta_prs[i,1]) # the time series is in 't'
     ts2 = SAC.read(sta_prs[i,2])
 
-    arr1 = padded_mw_array(ts1.t, win_len, STEP)
-    arr2 = padded_mw_array(ts2.t, win_len, STEP)
+    arr1 = mw_array(ts1.t, win_len, STEP, true)
+    arr2 = mw_array(ts2.t, win_len, STEP, true)
 
     arr_xc = array_xcorr(arr1, arr2)
     #uncomment the following line if we want the fft of the egf
