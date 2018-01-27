@@ -30,5 +30,9 @@ Feel free to use any code but please acknowledge me in your work.
 
 ---  
 ## Updates
-__README Last Updated__ 01/25/2018  
-- Original files pushed
+__README Last Updated__ 01/27/2018  
+
+01/25/2018 - Original files pushed  
+
+01/27/2018 -  Modified frequency-domain cross correlation functions, added time-domain cross correlation, added new functions for preprocessing and 
+filtering

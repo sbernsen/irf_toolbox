@@ -44,8 +44,7 @@ function mw_array(ts, win_len, STEP, pad)
     end
 
     for i in 1:n
-        ts_norm = rms_norm( ts[ a[i]:b[i] ] )
-        mw_array[1:win_len, i] = ts_norm.*win
+        mw_array[1:win_len, i] = ts[ a[i]:b[i] ].*win
     end
 
     return mw_array
@@ -69,53 +68,61 @@ function array_xcorr(arr1, arr2)
     arr2 = mapslices(fft, arr2, 1)
 
     # Compute the dot product
-    fft_arr_f = arr1.*conj(arr2)
-    fft_arr_b = arr2.*conj(arr1)
+    fft_arr = arr1.*conj(arr2)
 
     # Get the inverse FFT
-    arr_xc_f = real( mapslices( ifft, fft_arr_f, 1) )
-    arr_xc_b = real( mapslices( ifft, fft_arr_b, 1) )
-    arr_xc = arr_xc_f + arr_xc_b
-    return arr_xc_f, arr_xc_b, arr_xc
+    arr_xc = real( mapslices( ifft, fft_arr, 1) )
+
+    # normalize by rms
+    arr_xc = mapslices( rms_norm, arr_xc, 1)
+
+    # Stack
+    xcf = mapslices(mean, arr_xc, 2)
+    
+    return xcf
 
 end
 
-function xcorr_td(arr1, arr2, forward)
-# compute the time domain cross correlation for two equal length time series for positive or negative lags
+
+function arr_xcorr_td(ts1, ts2)
+# Compute the cross correlation in the frequency domain of each column
 #
 # Input Variables:
-#	arr1, arr2 -  the m-by-n array to cross correlate
-#	forward -     boolean value (true/false) to compute the xcf in positive or
-#                 negative lags
+#   arr1, arr2 - padded arrays of equal dimensions to be cross correlated
+#
 # Output Variables:
-#	arr_xc -         the m-by-n cross correlation vector
+#   arr_xc - the cross correlation of equal dimensions the input arrays
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    m = size(ts1, 1)
+
+    # create the tukey window
+    alpha = 0.2
+    win = tukey(win_len, alpha)
+
+    # Remove the standard deviation
+    ts1 = rms_norm(ts1)
+    ts2 = rms_norm(ts2)
+
+    # Pad the stationary time series
+    ts2_pad = [zeros(m, 1); ts2; zeros(m, 1) ]
 
     # Allocate space
-    n = length(ts1)
-    xcf = zeros(n-1, 1)
+    xcf = zeros(2m, 1)
+    zero_vec = zeros(3*m-2, 1)
 
-    # Compute the FFT on each column
-    arr1 = mapslices(fft, arr1, 1)
-    arr2 = mapslices(fft, arr2, 1)
 
-    # Compute the cross correlation
-    if forward == "true"
-        # Compute the dot product
-        fft_arr = arr1.*conj(arr2)
-
-        # Get the inverse FFT
-        arr_xc = real( mapslices( ifft, fft_arr, 1) )
-    else
-        # Compute the dot product
-        fft_arr = arr2.*conj(arr1)
-
-        # Get the inverse FFT
-        arr_xc = real( mapslices( ifft, fft_arr, 1) )
+    for i in 2:(2m-1)
+        v1 = ts2_pad[i:(m+i-1)]
+        v2 = zero_vec[i:(m+i-1)] + ts1
+        xcf[i] = (v1'*v2)[1]
     end
 
-    return arr_xc
+    return xcf
 
 end
+
 
 
 function rms_norm(ts)
