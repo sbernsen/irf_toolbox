@@ -1,7 +1,7 @@
-window: 4000
-step: 1
+window: 2000
+step: 1024
 reference_station: 13
 function_path: /home/bernsen/seismic/impulse_response_toolbox/functions/
 filter: bp
-corner: 100/400
+corner: 1/4000
 fs: 4000

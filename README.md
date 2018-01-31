@@ -13,6 +13,11 @@ translated to Julia and will become obsolete.
 Examples and edits will continue to be added along with more documentation as the project progresses. Check the
 
 #### Usage ####
+
+R and julia programming languages along with Bash need to be installed. To install the required packages, run from a terminal 
+
+$ ./install_packages
+
 The tab delimited text file, 'station_pairs.txt' is required for station-station cross-correlation. The columns are:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[filepath_tx]
@@ -24,6 +29,8 @@ where [location_x_meters] is relative to the source for an active source. For an
 arbitrary source location use 'virtual_gathers'. Since the distance from source
 may have duplicates, use 'location_number' to refer to the
 relative order of the stations.
+
+
 
 Feel free to use any code but please acknowledge me in your work.
 

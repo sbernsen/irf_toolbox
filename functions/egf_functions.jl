@@ -78,7 +78,7 @@ function array_xcorr(arr1, arr2)
 
     # Stack
     xcf = mapslices(mean, arr_xc, 2)
-    
+
     return xcf
 
 end
@@ -96,28 +96,25 @@ function arr_xcorr_td(ts1, ts2)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     m = size(ts1, 1)
+    n = size(ts1, 2)
 
-    # create the tukey window
-    alpha = 0.2
-    win = tukey(win_len, alpha)
+    if n > 1
+        xcf = zeros(2m-1, 1)
 
-    # Remove the standard deviation
-    ts1 = rms_norm(ts1)
-    ts2 = rms_norm(ts2)
+        for i in 1:n
+            xcf = xcf + rms_norm( xcorr(ts2[:,i], ts1[:,i] ) )
+        end
 
-    # Pad the stationary time series
-    ts2_pad = [zeros(m, 1); ts2; zeros(m, 1) ]
+        xcf = xcf./n
 
-    # Allocate space
-    xcf = zeros(2m, 1)
-    zero_vec = zeros(3*m-2, 1)
+    else
+        # Remove the standard deviation
+        ts1 = rms_norm(ts1)
+        ts2 = rms_norm(ts2)
 
-
-    for i in 2:(2m-1)
-        v1 = ts2_pad[i:(m+i-1)]
-        v2 = zero_vec[i:(m+i-1)] + ts1
-        xcf[i] = (v1'*v2)[1]
+        xcf = xcorr(ts2[:], ts1[:])
     end
+
 
     return xcf
 

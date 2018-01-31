@@ -1,6 +1,9 @@
+#!/usr/bin/env julia
+
 using DataFrames
 
-config = readtable("config.txt", header = false, separator = ':')
+# the file is defined on the command line
+config = readtable(config_file, header = false, separator = ':')
 
 # Assign the values listed in the configuration file
 win_len = parse(Int, (config[ config[:,1] .== "window",2])[1] )
