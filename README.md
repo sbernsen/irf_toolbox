@@ -20,7 +20,10 @@ $ bash install_packages
 
 After installing required packages, put the files 'EGF' and 'Preprocessing' into the julia path. This can be done by putting the modules into the directory given by running the command  
 
-\> Pkg.Dir.path()
+\> Pkg.Dir.path()  
+
+or creating a ~/.juliarc.jl file and appending:  @everywhere push!(LOAD_PATH,"/directory/path/to/the/modules/").
+
 
 The tab delimited text file, 'station_pairs.txt' is required for station-station cross-correlation. The columns are:
 
