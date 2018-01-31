@@ -1,6 +1,9 @@
+module EGF
+
+
+export mw_array, array_xcorr, array_xcorr_td, rms_norm
+
 using DSP
-
-
 
 function mw_array(ts, win_len, STEP, pad)
 # Assemble an array for the tukey window where each column is a new step in the
@@ -84,7 +87,7 @@ function array_xcorr(arr1, arr2)
 end
 
 
-function arr_xcorr_td(ts1, ts2)
+function array_xcorr_td(ts1, ts2)
 # Compute the cross correlation in the frequency domain of each column
 #
 # Input Variables:
@@ -151,4 +154,8 @@ function matrix2SAC(data_arr, sta_list)
 #
 # This function was made specific for 'virtual_gathers.jl' because each gather
 # corresponds to the list of stations used to create them.
+end
+
+
+# end the module
 end

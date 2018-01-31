@@ -2,7 +2,7 @@
 
 ## Julia Libraries
 
-SAC, DataFrames, RCall, DSP
+SAC, DataFrames, RCall, DSP, CSV, Indicators
 
 ## R Libraries
 RSEIS

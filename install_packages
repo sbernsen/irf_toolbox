@@ -8,8 +8,10 @@ Rscript -e "install.packages( c('RSEIS', 'RPMG', 'Rwave'), dependencies = TRUE, 
 julia << EOF  
     Pkg.update()
     Pkg.add("DSP")
+    Pkg.add("CSV")
     Pkg.add("DataFrames")
     Pkg.add("RCall")
+    Pkg.add("Indicators")
     Pkg.add("Glob")
     Pkg.clone("https://github.com/anowacki/SAC.jl")
 EOF

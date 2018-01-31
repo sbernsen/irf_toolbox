@@ -19,15 +19,15 @@ end
 =#
 
 config_file = "config.txt"
-include("bin/read_config.jl")
+include("../bin/read_config.jl")
 
 # ---------------------------------------------------------------------------- #
 #                       Set Paths and Define Constants                         #
 # ---------------------------------------------------------------------------- #
-# Load all of the functions we need
-include( function_path*"egf_functions.jl" )
-include( function_path*"preprocessing_functions.jl" )
-include( function_path*"filtering_functions.jl" )
+# Load all of the functions we need from modules
+@everywhere push!(LOAD_PATH, function_path) 
+
+using EGF, Preprocessing
 
 
 # Load the list of stations

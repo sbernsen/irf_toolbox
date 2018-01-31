@@ -14,9 +14,13 @@ Examples and edits will continue to be added along with more documentation as th
 
 #### Usage ####
 
-R and julia programming languages along with Bash need to be installed. To install the required packages, run from a terminal 
+R and julia programming languages along with Bash need to be installed. To install the required packages, run from a terminal:  
 
-$ ./install_packages
+$ bash install_packages
+
+After installing required packages, put the files 'EGF' and 'Preprocessing' into the julia path. This can be done by putting the modules into the directory given by running the command  
+
+\> Pkg.Dir.path()
 
 The tab delimited text file, 'station_pairs.txt' is required for station-station cross-correlation. The columns are:
 
